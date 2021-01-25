@@ -1,0 +1,165 @@
+
+// include the library code:
+#include <LiquidCrystal.h>
+
+// initialize the library by associating any needed LCD interface pin
+// with the arduino pin number it is connected to
+const int rs = 7, en = 6, d4 = 2, d5 = 5, d6 = 4, d7 = 3;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+String incomingString;
+String day = "Sunday";
+int long hour = 12;
+int long minutes = 0;
+int long seconds = 0;
+String timeSuffix = "PM";
+void setup() {
+  // set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
+  Serial.begin(9600);
+  Serial.println("Started!");
+}
+
+void loop() {
+  lcd.setCursor(0,0);
+  lcd.print("Time: ");
+  lcd.print(hour);
+  lcd.print(":");
+  if(minutes < 10){
+    lcd.print("0");
+  }
+  lcd.print(minutes);
+  lcd.print(timeSuffix);
+  lcd.setCursor(0,1);
+  lcd.print("Alarm: 6:55AM");
+   if (Serial.available() > 0) {
+    // read the incoming byte:
+    incomingString = Serial.readString();
+    if(incomingString.equals("time\n") || incomingString.equals("Time\n")){
+      Serial.print(day);
+      Serial.print(", ");
+      Serial.print(hour);
+      Serial.print(":");
+      Serial.print(minutes);
+      Serial.print(":");
+      Serial.print(seconds);
+      Serial.println(timeSuffix);
+      }
+      else if(incomingString.equals("setTime\n") || incomingString.equals("settime\n")){
+        Serial.print("Hours: ");
+        while(Serial.available() == 0){}
+        String temp = Serial.readString();
+        Serial.println(temp);
+        hour = temp.toInt();
+        
+        Serial.print("Minutes: ");
+        while(Serial.available() == 0){}
+        String temp2 = Serial.readString();
+        Serial.println(temp2);
+        minutes = temp2.toInt();
+        
+        Serial.print("AM or PM: ");
+        while(Serial.available() == 0){}
+        String temp3 = Serial.readString();
+        Serial.println(temp3);
+        
+        if(temp3 == "AM\n" || temp3 == "Am\n" |temp3 == "am\n" |temp3 == "a\n" |temp3 == "A\n"){
+          timeSuffix = "AM";
+          Serial.println("Time Set!");
+        }
+        else if(temp3 == "PM\n" || temp3 == "Pm\n" |temp3 == "pm\n" |temp3 == "p\n" |temp3 == "P\n"){
+          timeSuffix = "PM";
+          Serial.println("Time Set!");
+        }
+        else{
+          Serial.print("Incorrect option action aborted time not set!");
+        }
+        lcd.clear();
+      } 
+    else if(incomingString.equals("alarms\n") || incomingString.equals("Alarms\n")){
+      Serial.println("11:11AM");
+      }
+    else if(incomingString.equals("setDay\n") || incomingString.equals("setday\n")){
+      Serial.println("Please set the day by using, Sat, Sun, Mon, Tue, Wed, Thu, Fri");
+        Serial.print("Day: ");
+        while(Serial.available() == 0){}
+        String temp4 = Serial.readString();
+        if(temp4 == "Sat\n" || temp4 == "Sa\n" || temp4 == "Saturday\n"){
+            day = "Saturday";
+          }
+        else if(temp4 == "Sun\n" || temp4 == "Su\n" || temp4 == "Sunday\n"){
+            day = "Sunday";
+          }          
+        else if(temp4 == "Mon\n" || temp4 == "M\n" || temp4 == "Monday\n"){
+            day = "Monday";
+          }
+        else if(temp4 == "Tue\n" || temp4 == "Tu\n" || temp4 == "Tuesday\n"){
+            day = "Tuesday";
+          }
+        else if(temp4 == "Wed\n" || temp4 == "W\n" || temp4 == "Wednesday\n"){
+            day = "Wednesday";
+          }
+        else if(temp4 == "Thu\n" || temp4 == "Th\n" || temp4 == "Thursday\n"){
+            day = "Thursday";
+          }
+        else if(temp4 == "Fri\n" || temp4 == "F\n" || temp4 == "Friday\n"){
+            day = "Friday";
+          } 
+        else{
+          Serial.print("Incorrect option, day not set.");
+          }                        
+        }
+      
+    else if(incomingString.equals("setAlarm\n") || incomingString.equals("setalarm\n") || incomingString.equals("SetAlarm\n")){
+      Serial.println("11:11AM");
+      }
+    else if(incomingString.equals("help\n") || incomingString.equals("Help\n")){
+      Serial.println("time: Current Arduino Time and day");
+      Serial.println("setTime: set current Arduino Time");
+      Serial.println("setDay: Sets day");
+      Serial.println("alarms: lists all alarms");
+      Serial.println("setAlarm: sets new alarm");
+      }
+    else{
+      Serial.print(incomingString);
+      Serial.println("Command not found please type \"Help\" for all commands");
+    }}
+delay(1000);
+seconds++;
+  if(seconds == 59){
+    minutes++;
+    seconds = 0;
+  }
+  if(minutes == 60){
+    hour++;
+    minutes = 0;
+    lcd.clear();
+  }
+  if(hour == 13){
+    hour = 1;
+    if(timeSuffix == "AM"){
+       timeSuffix = "PM";
+    }
+    else{
+       timeSuffix = "PM";
+    }
+    lcd.clear();
+  }
+  if(hour >= 9 && minutes >= 0 && timeSuffix == "PM"){
+      digitalWrite(8, LOW);
+    }
+  else if(hour <= 1 && minutes >= 0 && timeSuffix == "AM"){
+      digitalWrite(8, LOW);
+    }
+  else if(hour == 12 && minutes >= 0 && timeSuffix == "AM"){
+      digitalWrite(8, LOW);
+    }
+  else if(hour >= 7 && minutes >= 0 && timeSuffix == "AM"){
+      digitalWrite(8, HIGH);
+    }
+  else if(hour >= 1 && minutes >= 0 && timeSuffix == "PM"){
+      digitalWrite(8, HIGH);
+    }
+  if(hour == 12 && minutes >= 0 && timeSuffix == "PM"){
+      digitalWrite(8, HIGH);
+    }
+}
